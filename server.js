@@ -20,6 +20,48 @@ const dbConfig = {
 
 const db = mysql.createPool(dbConfig);
 
+// Initialize database tables
+async function initDB() {
+  try {
+    await db.execute(`CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    await db.execute(`CREATE TABLE IF NOT EXISTS experts (
+      id VARCHAR(255) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      title VARCHAR(255),
+      avatar TEXT,
+      specialty VARCHAR(255),
+      rating DECIMAL(3,2),
+      field VARCHAR(255),
+      bio TEXT,
+      key_areas JSON,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    await db.execute(`CREATE TABLE IF NOT EXISTS bookings (
+      id VARCHAR(255) PRIMARY KEY,
+      user_email VARCHAR(255) NOT NULL,
+      expert_id VARCHAR(255),
+      type VARCHAR(255),
+      date VARCHAR(255),
+      slot VARCHAR(255),
+      notes TEXT,
+      reminder_type VARCHAR(255),
+      ai_image_url TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    console.log('✅ Database initialized');
+  } catch (error) {
+    console.error('❌ Database init failed:', error);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -28,6 +70,9 @@ app.use(express.json());
 
 // Serve static files from dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
+
+// Initialize database on startup
+initDB();
 
 // Save user endpoint
 app.post('/api/users', async (req, res) => {
@@ -110,5 +155,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
