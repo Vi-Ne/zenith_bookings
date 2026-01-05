@@ -48,7 +48,14 @@ if (process.env.MYSQL_URL) {
   });
 }
 
-const db = mysql.createPool(dbConfig);
+const db = mysql.createPool({
+  uri: process.env.MYSQL_URL,
+  waitForConnections: true,
+  connectionLimit: 10,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // Initialize database tables
 async function initDB() {
