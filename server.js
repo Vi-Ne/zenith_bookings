@@ -8,8 +8,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: '.env.local' });
-dotenv.config(); // Also load .env for production
+// Load environment variables
+if (process.env.NODE_ENV === 'production') {
+  // In production, Railway provides env vars directly
+  console.log('🚀 Production mode - using Railway env vars');
+} else {
+  dotenv.config({ path: '.env.local' });
+  dotenv.config();
+}
+
+console.log('🔍 Environment check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  DB_HOST: process.env.DB_HOST,
+  DB_USER: process.env.DB_USER,
+  DB_NAME: process.env.DB_NAME,
+  DB_PORT: process.env.DB_PORT
+});
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
