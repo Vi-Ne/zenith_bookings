@@ -22,24 +22,31 @@ console.log('🔍 Environment check:', {
   DB_HOST: process.env.DB_HOST,
   DB_USER: process.env.DB_USER,
   DB_NAME: process.env.DB_NAME,
-  DB_PORT: process.env.DB_PORT
+  DB_PORT: process.env.DB_PORT,
+  MYSQL_URL: process.env.MYSQL_URL ? 'present' : 'missing'
 });
 
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'zenith_db',
-  port: parseInt(process.env.DB_PORT || '3306')
-};
-
-console.log('🔍 Database config:', {
-  host: dbConfig.host,
-  user: dbConfig.user,
-  database: dbConfig.database,
-  port: dbConfig.port,
-  hasPassword: !!dbConfig.password
-});
+// Use MYSQL_URL if available (Railway's preferred method)
+let dbConfig;
+if (process.env.MYSQL_URL) {
+  dbConfig = process.env.MYSQL_URL;
+  console.log('🔗 Using MYSQL_URL connection');
+} else {
+  dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'zenith_db',
+    port: parseInt(process.env.DB_PORT || '3306')
+  };
+  console.log('🔍 Database config:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    port: dbConfig.port,
+    hasPassword: !!dbConfig.password
+  });
+}
 
 const db = mysql.createPool(dbConfig);
 
