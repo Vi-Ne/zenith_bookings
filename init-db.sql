@@ -1,0 +1,37 @@
+CREATE DATABASE IF NOT EXISTS zenith_db;
+USE zenith_db;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS experts (
+  id VARCHAR(255) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  title VARCHAR(255),
+  avatar TEXT,
+  specialty VARCHAR(255),
+  rating DECIMAL(3,2),
+  field VARCHAR(255),
+  bio TEXT,
+  key_areas JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+  id VARCHAR(255) PRIMARY KEY,
+  user_email VARCHAR(255) NOT NULL,
+  expert_id VARCHAR(255),
+  type VARCHAR(255),
+  date VARCHAR(255),
+  slot VARCHAR(255),
+  notes TEXT,
+  reminder_type VARCHAR(255),
+  ai_image_url TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_email) REFERENCES users(email),
+  FOREIGN KEY (expert_id) REFERENCES experts(id)
+);
