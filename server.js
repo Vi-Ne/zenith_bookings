@@ -19,6 +19,14 @@ const dbConfig = {
   port: parseInt(process.env.DB_PORT || '3306')
 };
 
+console.log('🔍 Database config:', {
+  host: dbConfig.host,
+  user: dbConfig.user,
+  database: dbConfig.database,
+  port: dbConfig.port,
+  hasPassword: !!dbConfig.password
+});
+
 const db = mysql.createPool(dbConfig);
 
 // Initialize database tables
