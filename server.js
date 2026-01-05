@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: '.env.local' });
+dotenv.config(); // Also load .env for production
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
@@ -72,7 +73,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initialize database on startup
-initDB();
+setTimeout(() => {
+  initDB();
+}, 2000); // Wait 2 seconds for DB to be ready
 
 // Save user endpoint
 app.post('/api/users', async (req, res) => {
