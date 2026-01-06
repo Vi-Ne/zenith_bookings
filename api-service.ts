@@ -1,7 +1,7 @@
 export const apiService = {
   async saveUser(name: string, email: string) {
     try {
-      const response = await fetch('http://localhost:3001/api/users', {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email })
@@ -15,7 +15,7 @@ export const apiService = {
 
   async saveBooking(booking: any, userEmail: string) {
     try {
-      const response = await fetch('http://localhost:3001/api/bookings', {
+      const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ booking, userEmail })
@@ -29,7 +29,7 @@ export const apiService = {
 
   async getExperts(field: string) {
     try {
-      const response = await fetch(`http://localhost:3001/api/experts/${encodeURIComponent(field)}`);
+      const response = await fetch(`/api/experts/${encodeURIComponent(field)}`);
       if (response.ok) {
         return await response.json();
       }
@@ -42,7 +42,7 @@ export const apiService = {
 
   async addExpert(expert: any) {
     try {
-      const response = await fetch('http://localhost:3001/api/experts', {
+      const response = await fetch('/api/experts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(expert)
