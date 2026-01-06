@@ -270,10 +270,18 @@ app.get('/api/experts/:field', async (req, res) => {
     const { field } = req.params;
     if (dbConnected) {
       const [rows] = await db.execute('SELECT * FROM experts WHERE field = ?', [field]);
-      const experts = rows.map(expert => ({
-        ...expert,
-        keyAreas: JSON.parse(expert.key_areas || '[]')
-      }));
+      const experts = rows.map(expert => {
+        let keyAreas = [];
+        try {
+          keyAreas = JSON.parse(expert.key_areas || '[]');
+        } catch (e) {
+          keyAreas = [];
+        }
+        return {
+          ...expert,
+          keyAreas
+        };
+      });
       res.json(experts);
     } else {
       const experts = fallbackExperts.filter(expert => expert.field === field);
