@@ -65,7 +65,7 @@ const db = mysql.createPool({
   }
 });
 
-// Initialize database tables
+// Initialize database tables with graceful fallback
 async function initDB() {
   try {
     await db.execute(`CREATE TABLE IF NOT EXISTS users (
@@ -102,10 +102,14 @@ async function initDB() {
     )`);
     
     console.log('✅ Database initialized');
+    return true;
   } catch (error) {
     console.error('❌ Database init failed:', error);
+    return false;
   }
 }
+
+let dbConnected = false;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -130,8 +134,11 @@ async function initDBWithRetry(retries = 3) {
   }
 }
 
-setTimeout(() => {
-  initDBWithRetry();
+setTimeout(async () => {
+  dbConnected = await initDB();
+  if (!dbConnected) {
+    console.log('⚠️ App running without database - using fallback data');
+  }
 }, 2000);
 
 // Save user endpoint
@@ -174,19 +181,83 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-// Get experts by field
+// Get experts by field with fallback
 app.get('/api/experts/:field', async (req, res) => {
+  const fallbackExperts = [
+    {
+      id: 'exp-001',
+      name: 'Dr. Sarah Chen',
+      title: 'Senior Business Strategist',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?auto=format&fit=crop&q=80&w=150',
+      specialty: 'Strategic Planning & Growth',
+      rating: '4.9',
+      field: 'Business Consultation',
+      bio: 'Former McKinsey partner with 15+ years helping Fortune 500 companies scale operations.',
+      keyAreas: ['Strategic Planning', 'Market Analysis', 'Growth Strategy', 'Digital Transformation']
+    },
+    {
+      id: 'exp-002',
+      name: 'Dr. Michael Rodriguez',
+      title: 'Chief Medical Officer',
+      avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=150',
+      specialty: 'Preventive Medicine',
+      rating: '4.8',
+      field: 'Health Checkup',
+      bio: 'Board-certified physician specializing in comprehensive health assessments and preventive care.',
+      keyAreas: ['Preventive Care', 'Health Screening', 'Wellness Planning', 'Risk Assessment']
+    },
+    {
+      id: 'exp-003',
+      name: 'Alex Thompson',
+      title: 'Lead Solutions Architect',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
+      specialty: 'Cloud Infrastructure',
+      rating: '4.9',
+      field: 'Technical Support',
+      bio: 'AWS certified architect with expertise in scalable cloud solutions and system optimization.',
+      keyAreas: ['Cloud Architecture', 'System Design', 'Performance Optimization', 'DevOps']
+    },
+    {
+      id: 'exp-004',
+      name: 'Emma Wilson',
+      title: 'Creative Director',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150',
+      specialty: 'UX/UI Design',
+      rating: '4.7',
+      field: 'Design Review',
+      bio: 'Award-winning designer with 12+ years creating user-centered digital experiences.',
+      keyAreas: ['User Experience', 'Interface Design', 'Design Systems', 'Prototyping']
+    },
+    {
+      id: 'exp-005',
+      name: 'James Parker',
+      title: 'Senior Legal Counsel',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150',
+      specialty: 'Corporate Law',
+      rating: '4.8',
+      field: 'Legal Advice',
+      bio: 'Corporate attorney with extensive experience in business law, contracts, and compliance.',
+      keyAreas: ['Contract Law', 'Corporate Governance', 'Compliance', 'Risk Management']
+    }
+  ];
+
   try {
     const { field } = req.params;
-    const [rows] = await db.execute('SELECT * FROM experts WHERE field = ?', [field]);
-    const experts = rows.map(expert => ({
-      ...expert,
-      keyAreas: JSON.parse(expert.key_areas || '[]')
-    }));
-    res.json(experts);
+    if (dbConnected) {
+      const [rows] = await db.execute('SELECT * FROM experts WHERE field = ?', [field]);
+      const experts = rows.map(expert => ({
+        ...expert,
+        keyAreas: JSON.parse(expert.key_areas || '[]')
+      }));
+      res.json(experts);
+    } else {
+      const experts = fallbackExperts.filter(expert => expert.field === field);
+      res.json(experts);
+    }
   } catch (error) {
     console.error('Error fetching experts:', error);
-    res.status(500).json({ error: 'Failed to fetch experts' });
+    const experts = fallbackExperts.filter(expert => expert.field === req.params.field);
+    res.json(experts);
   }
 });
 
