@@ -29,7 +29,12 @@ console.log('🔍 Environment check:', {
 // Use MYSQL_URL if available (Railway's preferred method)
 let dbConfig;
 if (process.env.MYSQL_URL) {
-  dbConfig = process.env.MYSQL_URL;
+  dbConfig = {
+    uri: process.env.MYSQL_URL,
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
+  };
   console.log('🔗 Using MYSQL_URL connection');
 } else {
   dbConfig = {
@@ -37,7 +42,10 @@ if (process.env.MYSQL_URL) {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'zenith_db',
-    port: parseInt(process.env.DB_PORT || '3306')
+    port: parseInt(process.env.DB_PORT || '3306'),
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
   };
   console.log('🔍 Database config:', {
     host: dbConfig.host,
@@ -108,10 +116,23 @@ app.use(express.json());
 // Serve static files from dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Initialize database on startup
+// Initialize database on startup with retry logic
+async function initDBWithRetry(retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await initDB();
+      return;
+    } catch (error) {
+      console.log(`⚠️ Database init attempt ${i + 1} failed, retrying...`);
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+}
+
 setTimeout(() => {
-  initDB();
-}, 2000); // Wait 2 seconds for DB to be ready
+  initDBWithRetry();
+}, 2000);
 
 // Save user endpoint
 app.post('/api/users', async (req, res) => {
